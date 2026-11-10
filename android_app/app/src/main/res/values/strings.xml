@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Теплый Пол</string>
+    <string name="status_connecting">Подключение к MQTT…</string>
+    <string name="status_online">В сети</string>
+    <string name="status_offline">Не в сети</string>
+    <string name="btn_power_on">ВКЛЮЧИТЬ ОТОПЛЕНИЕ</string>
+    <string name="btn_power_off">ВЫКЛЮЧИТЬ ОТОПЛЕНИЕ</string>
+    <string name="settings_title">Настройки MQTT</string>
+</resources>

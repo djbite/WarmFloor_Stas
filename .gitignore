@@ -1,0 +1,9 @@
+.pio
+.vscode
+*.zip
+*.tar.gz
+*.bin
+.gradle/
+build/
+*.iml
+.idea/
