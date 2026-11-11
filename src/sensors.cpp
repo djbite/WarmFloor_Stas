@@ -102,17 +102,17 @@ void sensors_init() {
     dtSensors.begin();
     dtSensors.setWaitForConversion(false); // Неблокирующий опрос (не тормозит Wi-Fi)
 
-    // При старте выставляем статус ошибки (пока не придут реальные данные)
+    // При старте начинаем с 0 ошибок, чтобы алгоритм наглядно отсчитал 1..5 ошибок
     zone1.currentTemp = SENSOR_ERR_TEMP;
     zone1.relayState = false;
-    zone1.sensorError = true;
+    zone1.sensorError = false;
 
     zone2.currentTemp = SENSOR_ERR_TEMP;
     zone2.relayState = false;
-    zone2.sensorError = true;
+    zone2.sensorError = false;
 
     air.currentTemp = SENSOR_ERR_TEMP;
-    air.sensorError = true;
+    air.sensorError = false;
 
     z1ErrorCount = 0;
     z2ErrorCount = 0;
@@ -131,7 +131,7 @@ static void processSensorReading(float rawTemp, float& outTemp, bool& outError, 
 
     if (ok) {
         // УСПЕШНОЕ ЧТЕНИЕ: моментальный сброс счетчика ошибок в 0!
-        if (errorCounter > 0) {
+        if (errorCounter > 0 || outError) {
             Serial.printf("[SENSORS] ✔ Датчик %s восстановил связь (T=%.2f °C). Ошибки сброшены в 0.\n", name, rawTemp);
         }
         errorCounter = 0;
@@ -142,15 +142,13 @@ static void processSensorReading(float rawTemp, float& outTemp, bool& outError, 
         if (errorCounter < MAX_SENSOR_ERRORS) {
             errorCounter++;
             Serial.printf("[SENSORS] ⚠️ Сбой чтения %s (%d/%d)\n", name, errorCounter, MAX_SENSOR_ERRORS);
-        }
 
-        // АВАРИЯ ФИКСИРУЕТСЯ СТРОГО ПОСЛЕ 5 ОШИБОК ПОДРЯД:
-        if (errorCounter >= MAX_SENSOR_ERRORS) {
-            if (!outError) {
+            // АВАРИЯ ФИКСИРУЕТСЯ СТРОГО НА 5-Й ОШИБКЕ ПОДРЯД:
+            if (errorCounter == MAX_SENSOR_ERRORS) {
+                outError = true;
+                outTemp = SENSOR_ERR_TEMP;
                 Serial.printf("[SENSORS] ❌ АВАРИЯ: %s — 5 ОШИБОК ПОДРЯД! Нагрев зоны отключен ради безопасности.\n", name);
             }
-            outError = true;
-            outTemp = SENSOR_ERR_TEMP;
         }
     }
 }
@@ -178,7 +176,7 @@ void sensors_tick() {
         float t1 = dtSensors.getTempC(SENSOR_ADDRESSES[SENSOR_IDX_ZONE1]);
         processSensorReading(t1, zone1.currentTemp, zone1.sensorError, z1ErrorCount, "Зона 1 (Пол)");
     } else {
-        processSensorReading(DEVICE_DISCONNECTED_C, zone1.currentTemp, zone1.sensorError, z1ErrorCount, "Зона 1 (адрес не задан)");
+        processSensorReading(DEVICE_DISCONNECTED_C, zone1.currentTemp, zone1.sensorError, z1ErrorCount, "Зона 1 (Пол)");
     }
 
     // Чтение Зоны 2 (Пол 2)
@@ -186,7 +184,7 @@ void sensors_tick() {
         float t2 = dtSensors.getTempC(SENSOR_ADDRESSES[SENSOR_IDX_ZONE2]);
         processSensorReading(t2, zone2.currentTemp, zone2.sensorError, z2ErrorCount, "Зона 2 (Пол)");
     } else {
-        processSensorReading(DEVICE_DISCONNECTED_C, zone2.currentTemp, zone2.sensorError, z2ErrorCount, "Зона 2 (адрес не задан)");
+        processSensorReading(DEVICE_DISCONNECTED_C, zone2.currentTemp, zone2.sensorError, z2ErrorCount, "Зона 2 (Пол)");
     }
 
     // Чтение Воздуха
@@ -194,7 +192,7 @@ void sensors_tick() {
         float tAir = dtSensors.getTempC(SENSOR_ADDRESSES[SENSOR_IDX_AIR]);
         processSensorReading(tAir, air.currentTemp, air.sensorError, airErrorCount, "Воздух (Комната)");
     } else {
-        processSensorReading(DEVICE_DISCONNECTED_C, air.currentTemp, air.sensorError, airErrorCount, "Воздух (адрес не задан)");
+        processSensorReading(DEVICE_DISCONNECTED_C, air.currentTemp, air.sensorError, airErrorCount, "Воздух (Комната)");
     }
 
     // Запуск следующего неблокирующего измерения
