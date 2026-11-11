@@ -257,27 +257,37 @@ function updateUI() {
   }
 
   // Воздух
-  document.getElementById('air-cur').textContent = state.air_t.toFixed(1);
   const airSt = document.getElementById('air-status');
-  if (!state.heat_en) {
-    airSt.className = 'badge badge-off';
-    airSt.textContent = 'Отопление выключено';
-  } else if (state.air_demand) {
-    airSt.className = 'badge badge-on';
-    airSt.textContent = 'Требует тепла';
+  if (state.air_err || state.air_t <= -100) {
+    document.getElementById('air-cur').textContent = '--.-';
+    airSt.className = 'badge badge-err';
+    airSt.textContent = 'Ошибка датчика';
   } else {
-    airSt.className = 'badge badge-air-off';
-    airSt.textContent = 'Воздух прогрет (гасит оба пола)';
+    document.getElementById('air-cur').textContent = state.air_t.toFixed(1);
+    if (!state.heat_en) {
+      airSt.className = 'badge badge-off';
+      airSt.textContent = 'Отопление выключено';
+    } else if (state.air_demand) {
+      airSt.className = 'badge badge-on';
+      airSt.textContent = 'Требует тепла';
+    } else {
+      airSt.className = 'badge badge-air-off';
+      airSt.textContent = 'Воздух прогрет (гасит оба пола)';
+    }
   }
 
   // Зона 1
-  document.getElementById('z1-cur').textContent = state.z1_t.toFixed(1);
   const z1St = document.getElementById('z1-status');
-  if (!state.heat_en) {
-    z1St.className = 'badge badge-off';
-    z1St.textContent = 'Выключен';
+  if (state.z1_err || state.z1_t <= -100) {
+    document.getElementById('z1-cur').textContent = '--.-';
+    z1St.className = 'badge badge-err';
+    z1St.textContent = 'Ошибка датчика';
   } else {
-    if (state.z1_relay) {
+    document.getElementById('z1-cur').textContent = state.z1_t.toFixed(1);
+    if (!state.heat_en) {
+      z1St.className = 'badge badge-off';
+      z1St.textContent = 'Выключен';
+    } else if (state.z1_relay) {
       z1St.className = 'badge badge-heat';
       z1St.textContent = 'Нагрев (SSR ВКЛ)';
     } else if (!state.air_demand) {
@@ -290,13 +300,17 @@ function updateUI() {
   }
 
   // Зона 2
-  document.getElementById('z2-cur').textContent = state.z2_t.toFixed(1);
   const z2St = document.getElementById('z2-status');
-  if (!state.heat_en) {
-    z2St.className = 'badge badge-off';
-    z2St.textContent = 'Выключен';
+  if (state.z2_err || state.z2_t <= -100) {
+    document.getElementById('z2-cur').textContent = '--.-';
+    z2St.className = 'badge badge-err';
+    z2St.textContent = 'Ошибка датчика';
   } else {
-    if (state.z2_relay) {
+    document.getElementById('z2-cur').textContent = state.z2_t.toFixed(1);
+    if (!state.heat_en) {
+      z2St.className = 'badge badge-off';
+      z2St.textContent = 'Выключен';
+    } else if (state.z2_relay) {
       z2St.className = 'badge badge-heat';
       z2St.textContent = 'Нагрев (SSR ВКЛ)';
     } else if (!state.air_demand) {
@@ -391,11 +405,14 @@ void net_webserver_init() {
 
         doc["z1_t"] = roundf(zone1.currentTemp * 10.0f) / 10.0f;
         doc["z1_relay"] = zone1.relayState;
+        doc["z1_err"] = zone1.sensorError;
 
         doc["z2_t"] = roundf(zone2.currentTemp * 10.0f) / 10.0f;
         doc["z2_relay"] = zone2.relayState;
+        doc["z2_err"] = zone2.sensorError;
 
         doc["air_t"] = roundf(air.currentTemp * 10.0f) / 10.0f;
+        doc["air_err"] = air.sensorError;
 
         String response;
         serializeJson(doc, response);
