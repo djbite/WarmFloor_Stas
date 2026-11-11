@@ -4,7 +4,7 @@
 #define PROJECT_NAME     "WarmFloor_Stas"
 
 // Текущая версия прошивки
-#define FIRMWARE_VERSION "1.0.25"
+#define FIRMWARE_VERSION "1.0.26"
 
 // Дата и время компиляции (подтягиваются компилятором автоматически)
 #define COMPILE_DATE     __DATE__
